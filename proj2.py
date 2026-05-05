@@ -8,24 +8,50 @@ sys.setrecursionlimit(10_000)
 
 @dataclass(frozen=True)
 class Row:
-    data: str
+    country: str
+    year: int | None
+    electricity_and_heat_co2_emissions: float | None
+    electricity_and_heat_co2_emissions_per_capita: float | None
+    energy_co2_emissions: float | None
+    energy_co2_emissions_per_capita: float | None
+    total_co2_emissions_excluding_lucf: float | None
+    total_co2_emissions_excluding_lucf_per_capita: float | None
 
 @dataclass(frozen=True)
 class Node:
     value: Row
     next: Node | None
+    
 
 def read_csv_lines(filename: str) -> Optional[Node]:
-    with open(filename, 'r') as f:
-        reader = csv.reader(f)
-        head: Node | None = None
-        for fields in reader:
-            row = parse_row(fields)
-            head = Node(row, head)
-        return head
+    with open(filename, newline = "") as csvfile:
+        reader = csv.reader(csvfile)
+
+        header = next(reader)
+        if header != columns:
+            raise ValueError("Invalid Header")
+        
+        rows = list(reader)
+    
+    return build(rows, 0)
+
+def build(rows: list[list[str]], index: int = 0) -> Optional[Node]:
+    if index >= len(rows):
+        return None
+    row = parse_row(rows[index])
+    return Node(row, build(rows, index + 1))
 
 def parse_row(fields:list[str]) -> Row:
-    return Row(float(fields[0]))
+    return Row(
+        country=fields[0],
+        year=int(fields[1]) if fields[1] else None,
+        electricity_and_heat_co2_emissions=float(fields[2]) if fields[2] else None,
+        electricity_and_heat_co2_emissions_per_capita=float(fields[3]) if fields[3] else None,
+        energy_co2_emissions=float(fields[4]) if fields[4] else None,
+        energy_co2_emissions_per_capita=float(fields[5]) if fields[5] else None,
+        total_co2_emissions_excluding_lucf=float(fields[6]) if fields[6] else None,
+        total_co2_emissions_excluding_lucf_per_capita=float(fields[7]) if fields[7] else None
+    )
 
 def listlen(data: Optional[Node]) -> int:
     if data is None:
@@ -64,13 +90,10 @@ def filter_rows(data:Optional[Node],
 
     filtered_next = filter_rows(data.next, field_name, comparison, value)
     
-    parts = data.value.data.split(",")
-    field_index = columns.index(field_name)
-    field_value = parts[field_index]
-
+    field_value = getattr(data.value, field_name)
     correct = False
 
-    if field_value == "":
+    if field_value is None:
         return filtered_next
     
     if field_name in numbers:
