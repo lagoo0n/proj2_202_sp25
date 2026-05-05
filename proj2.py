@@ -22,7 +22,7 @@ class Node:
     value: Row
     next: Node | None
     
-
+#Purpose: Read the csv file and create a linked list of Row objects where each node contains a row and reference to the next node
 def read_csv_lines(filename: str) -> Optional[Node]:
     with open(filename, newline = "") as csvfile:
         reader = csv.reader(csvfile)
@@ -35,24 +35,25 @@ def read_csv_lines(filename: str) -> Optional[Node]:
     
     return build(rows, 0)
 
+#Purpose: Recursively build a linked list of Row objects from a list of lists of strings
 def build(rows: list[list[str]], index: int = 0) -> Optional[Node]:
     if index >= len(rows):
         return None
     row = parse_row(rows[index])
     return Node(row, build(rows, index + 1))
 
+#Purpose: Parse a list of strings into a Row object as well as converting types or making them None
 def parse_row(fields:list[str]) -> Row:
-    return Row(
-        country=fields[0],
-        year=int(fields[1]) if fields[1] else None,
-        electricity_and_heat_co2_emissions=float(fields[2]) if fields[2] else None,
-        electricity_and_heat_co2_emissions_per_capita=float(fields[3]) if fields[3] else None,
-        energy_co2_emissions=float(fields[4]) if fields[4] else None,
-        energy_co2_emissions_per_capita=float(fields[5]) if fields[5] else None,
-        total_co2_emissions_excluding_lucf=float(fields[6]) if fields[6] else None,
-        total_co2_emissions_excluding_lucf_per_capita=float(fields[7]) if fields[7] else None
+    return Row(fields[0],int(fields[1]) if fields[1] else None,
+        float(fields[2]) if fields[2] else None,
+        float(fields[3]) if fields[3] else None,
+        float(fields[4]) if fields[4] else None,
+        float(fields[5]) if fields[5] else None,
+        float(fields[6]) if fields[6] else None,
+        float(fields[7]) if fields[7] else None
     )
 
+#Purpose: Count the number of nodes in a linked list
 def listlen(data: Optional[Node]) -> int:
     if data is None:
         return 0
@@ -73,6 +74,7 @@ columns = [
 
 numbers = set(columns) - {"country"}
 
+#Purpose: Filter a linked list of Row objects based on a field name, comparison, and value.
 def filter_rows(data:Optional[Node], 
                 field_name:str,
                 comparison: str,
